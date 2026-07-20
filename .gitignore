@@ -1,0 +1,30 @@
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Python caches / build
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.eggs/
+
+# Tooling caches
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+
+# Local test audio (do not ship samples)
+test.mp3
+*.wav
+*.m4a
+
+# OS junk
+.DS_Store
+
+# Env / secrets
+.env
+
+docs

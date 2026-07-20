@@ -1,0 +1,69 @@
+[project]
+name = "nexara"
+dynamic = ["version"]
+description = "Python SDK for the Nexara speech-to-text API: transcription, diarization, speaker roles, structured LLM output"
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+requires-python = ">=3.10"
+authors = [{ name = "Nexara" }]
+keywords = [
+    "nexara",
+    "speech-to-text",
+    "stt",
+    "asr",
+    "transcription",
+    "diarization",
+    "whisper",
+    "audio",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Multimedia :: Sound/Audio :: Speech",
+    "Typing :: Typed",
+]
+dependencies = [
+    "httpx>=0.27",
+    "pydantic>=2.0",
+    "jsonschema>=4.18",
+]
+
+[project.urls]
+Homepage = "https://nexara.ru"
+Documentation = "https://docs.nexara.ru"
+
+[project.optional-dependencies]
+dev = ["mypy>=1.8", "pytest>=8.0", "types-jsonschema"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.version]
+path = "nexara/__init__.py"
+
+[tool.hatch.build.targets.wheel]
+packages = ["nexara"]
+
+[tool.mypy]
+python_version = "3.10"
+strict = true
+plugins = ["pydantic.mypy"]
+
+[[tool.mypy.overrides]]
+# Tests use pytest fixtures (monkeypatch etc.) and inline handlers where full
+# annotations add noise without value. Keep strict typing on the package itself.
+module = "tests.*"
+disallow_untyped_defs = false
+disallow_incomplete_defs = false
+disallow_untyped_calls = false
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
