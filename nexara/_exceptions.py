@@ -50,6 +50,19 @@ class NotFoundError(APIError):
     """404."""
 
 
+class SyncLLMTimeoutError(APIError):
+    """413 — the synchronous LLM enrichment step ran out of time.
+
+    Only the sync `create()` path with a `prompt` raises this, and only on long
+    audio. Despite the HTTP status, it is *not* about payload size: the
+    transcription itself succeeded, but the LLM post-processing could not finish
+    within the synchronous time budget.
+
+    Do not retry synchronously — it will time out again. Resubmit the identical
+    request through `create_job()`, where the LLM step gets a far larger timeout.
+    """
+
+
 class RateLimitError(APIError):
     """429 — 10 req/sec per endpoint, or more than 200 in-progress jobs per key."""
 
@@ -60,6 +73,15 @@ class InternalServerError(APIError):
     The sync handler wraps everything in `except Exception` and returns a bare
     500 with no detail, so a transient GPU-provider blip and a permanent failure
     are indistinguishable from the response body.
+    """
+
+
+class BadGatewayError(APIError):
+    """502 — the LLM provider genuinely failed (empty or invalid output).
+
+    Distinct from `SyncLLMTimeoutError` (413), which is a timeout you recover
+    from by switching to async mode: here the enrichment provider returned
+    nothing usable. Treat it as an ordinary server error and retry later.
     """
 
 
@@ -101,8 +123,10 @@ _STATUS_MAP: dict[int, type[APIError]] = {
     402: InsufficientBalanceError,
     403: AuthenticationError,
     404: NotFoundError,
+    413: SyncLLMTimeoutError,
     429: RateLimitError,
     500: InternalServerError,
+    502: BadGatewayError,
 }
 
 

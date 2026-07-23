@@ -15,7 +15,7 @@ if sys.version_info < (3, 10):  # pragma: no cover
         f"{sys.version_info.major}.{sys.version_info.minor}."
     )
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"
 
 from ._client import AsyncNexara, Nexara
 from ._exceptions import (
@@ -23,6 +23,7 @@ from ._exceptions import (
     APIError,
     APITimeoutError,
     AuthenticationError,
+    BadGatewayError,
     BadRequestError,
     InsufficientBalanceError,
     InternalServerError,
@@ -32,6 +33,7 @@ from ._exceptions import (
     NexaraValidationError,
     NotFoundError,
     RateLimitError,
+    SyncLLMTimeoutError,
 )
 from ._sentinel import NOT_GIVEN, NotGiven
 from .types.diarization import Diarization, DiarizedSegment, DiarizedWord
@@ -54,6 +56,7 @@ __all__ = [
     "AsyncJob",
     "AsyncNexara",
     "AuthenticationError",
+    "BadGatewayError",
     "BadRequestError",
     "Diarization",
     "DiarizedSegment",
@@ -74,6 +77,7 @@ __all__ = [
     "RealtimeEvent",
     "Segment",
     "Sentence",
+    "SyncLLMTimeoutError",
     "Transcription",
     "VerboseTranscription",
     "Word",

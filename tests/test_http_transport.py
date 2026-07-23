@@ -12,8 +12,10 @@ import pytest
 from nexara import (
     APIConnectionError,
     APITimeoutError,
+    BadGatewayError,
     InternalServerError,
     Nexara,
+    SyncLLMTimeoutError,
     Transcription,
 )
 from nexara._http import HttpxTransport
@@ -204,6 +206,21 @@ def test_500_is_not_retried():
     assert calls["n"] == 1  # billed-before-500 hazard: never retried
 
 
+def test_413_is_not_retried():
+    calls = {"n": 0}
+
+    def handler(_r):
+        calls["n"] += 1
+        return httpx.Response(
+            413,
+            json={"detail": "The synchronous LLM request timed out. Use async mode for long audio."},
+        )
+
+    resp = _transport(handler, max_retries=3).request("POST", "/x", file=b"a")
+    assert resp.status_code == 413
+    assert calls["n"] == 1  # retrying sync just times out again — switch to async instead
+
+
 def test_connection_error_retried_then_raises():
     calls = {"n": 0}
 
@@ -267,3 +284,30 @@ def test_500_surfaces_as_internal_server_error():
 
     with pytest.raises(InternalServerError):
         nx.transcriptions.create(file=b"audio")
+
+
+def test_413_surfaces_as_sync_llm_timeout():
+    def handler(_r):
+        return httpx.Response(
+            413,
+            json={"detail": "The synchronous LLM request timed out. Use async mode for long audio."},
+        )
+
+    client = httpx.Client(transport=httpx.MockTransport(handler))
+    transport = HttpxTransport(api_key="k", base_url=BASE, http_client=client)
+    nx = Nexara(api_key="k", transport=transport)
+
+    with pytest.raises(SyncLLMTimeoutError):
+        nx.transcriptions.create(file=b"audio", prompt="summarize")
+
+
+def test_502_surfaces_as_bad_gateway():
+    def handler(_r):
+        return httpx.Response(502, text="bad gateway")
+
+    client = httpx.Client(transport=httpx.MockTransport(handler))
+    transport = HttpxTransport(api_key="k", base_url=BASE, http_client=client)
+    nx = Nexara(api_key="k", transport=transport)
+
+    with pytest.raises(BadGatewayError):
+        nx.transcriptions.create(file=b"audio", prompt="summarize")

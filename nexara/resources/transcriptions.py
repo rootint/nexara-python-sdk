@@ -180,6 +180,11 @@ class Transcriptions:
         was billed (the LLM step runs after the charge on the sync path), so a
         retry can pay twice. `create_job()` bills after the LLM instead, which
         makes a failed job free. See docs/design.md.
+
+        With a `prompt` on long audio the LLM step can exceed the synchronous
+        budget and raise `SyncLLMTimeoutError` (413). The transcription itself
+        succeeded; retrying synchronously just times out again. Resubmit the same
+        call through `create_job()`, where the LLM step gets a far larger timeout.
         """
         form = validate_and_build_form(
             task=task,
