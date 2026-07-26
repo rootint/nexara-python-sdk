@@ -46,15 +46,19 @@ def test_missing_key_raises(monkeypatch):
         Nexara()
 
 
-def test_realtime_unavailable_without_mock(monkeypatch):
-    """The streaming protocol is not public yet; a real client must get a clear
-    error, never fabricated mock transcripts."""
-    monkeypatch.delenv("NEXARA_USE_MOCK", raising=False)
-    with pytest.raises(NotImplementedError):
-        Nexara(api_key="k").realtime.connect()
+def test_realtime_connect_is_lazy():
+    """connect() builds a session without touching the network — the WebSocket
+    opens only when the session is entered."""
+    from nexara.resources.realtime import RealtimeSession
 
-
-def test_realtime_mock_opt_in(monkeypatch):
-    monkeypatch.setenv("NEXARA_USE_MOCK", "1")
     session = Nexara(api_key="k").realtime.connect()
-    assert session is not None
+    assert isinstance(session, RealtimeSession)
+    assert session._encoding == "s16le"   # int16 LE default
+    assert session.session_id is None      # not connected yet
+
+
+def test_realtime_url_and_encoding_wired():
+    client = Nexara(api_key="k", streaming_url="wss://example.test/ws")
+    session = client.realtime.connect(encoding="f32le")
+    assert session._url == "wss://example.test/ws"
+    assert session._encoding == "f32le"

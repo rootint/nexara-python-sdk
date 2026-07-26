@@ -14,6 +14,10 @@ DEFAULT_BASE_URL = "https://api.nexara.ru/v1"
 shape OpenAI users expect. Override per-call with base_url= or globally with the
 NEXARA_BASE_URL env var — handy for pointing at a locally-run instance."""
 
+# Realtime transcription lives in a separate service, reached over WebSocket.
+DEFAULT_STREAMING_URL = "wss://streaming.nexara.ru"
+"""Override with streaming_url= or the NEXARA_STREAMING_URL env var."""
+
 
 class Nexara:
     """Synchronous client for the Nexara speech-to-text API.
@@ -30,6 +34,7 @@ class Nexara:
         *,
         api_key: str | None = None,
         base_url: str | None = None,
+        streaming_url: str | None = None,
         timeout: float = 600.0,
         max_retries: int = 2,
         transport: Transport | None = None,
@@ -57,6 +62,9 @@ class Nexara:
 
         self.api_key = key
         self.base_url = base_url or os.environ.get("NEXARA_BASE_URL") or DEFAULT_BASE_URL
+        self.streaming_url = (
+            streaming_url or os.environ.get("NEXARA_STREAMING_URL") or DEFAULT_STREAMING_URL
+        )
         self.timeout = timeout
         self.max_retries = max_retries
 
@@ -67,7 +75,7 @@ class Nexara:
             max_retries=max_retries,
         )
         self.transcriptions = Transcriptions(self._transport)
-        self.realtime = Realtime(self.api_key)
+        self.realtime = Realtime(self.api_key, url=self.streaming_url)
 
     def close(self) -> None:
         """Release the underlying HTTP connection pool."""
@@ -97,6 +105,7 @@ class AsyncNexara:
         *,
         api_key: str | None = None,
         base_url: str | None = None,
+        streaming_url: str | None = None,
         timeout: float = 600.0,
         max_retries: int = 2,
         transport: AsyncTransport | None = None,
@@ -110,6 +119,9 @@ class AsyncNexara:
 
         self.api_key = key
         self.base_url = base_url or os.environ.get("NEXARA_BASE_URL") or DEFAULT_BASE_URL
+        self.streaming_url = (
+            streaming_url or os.environ.get("NEXARA_STREAMING_URL") or DEFAULT_STREAMING_URL
+        )
         self.timeout = timeout
         self.max_retries = max_retries
 
@@ -120,7 +132,7 @@ class AsyncNexara:
             max_retries=max_retries,
         )
         self.transcriptions = AsyncTranscriptions(self._transport)
-        self.realtime = Realtime(self.api_key)
+        self.realtime = Realtime(self.api_key, url=self.streaming_url)
 
     async def aclose(self) -> None:
         """Release the underlying HTTP connection pool."""

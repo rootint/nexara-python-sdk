@@ -120,6 +120,7 @@ class JobTimeoutError(NexaraError):
 
 _STATUS_MAP: dict[int, type[APIError]] = {
     400: BadRequestError,
+    401: AuthenticationError,
     402: InsufficientBalanceError,
     403: AuthenticationError,
     404: NotFoundError,

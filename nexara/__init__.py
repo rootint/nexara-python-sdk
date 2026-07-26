@@ -38,7 +38,7 @@ from ._exceptions import (
 from ._sentinel import NOT_GIVEN, NotGiven
 from .types.diarization import Diarization, DiarizedSegment, DiarizedWord
 from .types.job import AsyncJob, Job, JobStatus
-from .types.realtime import RealtimeEvent
+from .types.realtime import RealtimeEvent, RealtimeToken
 from .types.transcription import (
     LLMResult,
     Segment,
@@ -75,6 +75,7 @@ __all__ = [
     "NotGiven",
     "RateLimitError",
     "RealtimeEvent",
+    "RealtimeToken",
     "Segment",
     "Sentence",
     "SyncLLMTimeoutError",

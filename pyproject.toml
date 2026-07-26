@@ -40,7 +40,8 @@ Homepage = "https://nexara.ru"
 Documentation = "https://docs.nexara.ru"
 
 [project.optional-dependencies]
-dev = ["mypy>=1.8", "pytest>=8.0", "types-jsonschema"]
+realtime = ["websockets>=13"]
+dev = ["mypy>=1.8", "pytest>=8.0", "types-jsonschema", "websockets>=13"]
 
 [build-system]
 requires = ["hatchling"]
