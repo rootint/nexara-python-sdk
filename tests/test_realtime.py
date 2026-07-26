@@ -165,7 +165,7 @@ def test_handshake_402_maps_to_insufficient_balance(monkeypatch):
         body = b"insufficient balance: 2.4"
 
     async def fake_connect(url, **kw):
-        raise InvalidStatus(FakeResponse())
+        raise InvalidStatus(FakeResponse())  # type: ignore[arg-type]  # test double
 
     monkeypatch.setattr(rt.websockets, "connect", fake_connect)
     realtime = Realtime("key", url="wss://x/ws")
@@ -184,7 +184,7 @@ def test_handshake_403_maps_to_auth_error(monkeypatch):
         body = b"forbidden"
 
     async def fake_connect(url, **kw):
-        raise InvalidStatus(FakeResponse())
+        raise InvalidStatus(FakeResponse())  # type: ignore[arg-type]  # test double
 
     monkeypatch.setattr(rt.websockets, "connect", fake_connect)
     realtime = Realtime("key", url="wss://x/ws")

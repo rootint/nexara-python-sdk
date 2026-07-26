@@ -37,7 +37,7 @@ from __future__ import annotations
 import asyncio
 import json
 from types import TracebackType
-from typing import AsyncIterator
+from typing import Any, AsyncIterator
 
 from .._exceptions import (
     APIConnectionError,
@@ -49,7 +49,7 @@ from .._exceptions import (
 from ..types.realtime import RealtimeEvent, RealtimeToken
 
 try:
-    import websockets
+    import websockets as websockets  # explicit re-export (tests patch rt.websockets)
     from websockets.exceptions import ConnectionClosed, InvalidStatus
 except ImportError:  # pragma: no cover - exercised only without the extra
     websockets = None  # type: ignore[assignment]
@@ -218,14 +218,15 @@ class RealtimeSession:
             raise APIConnectionError("streaming server is shutting down")
 
     # -- helpers -----------------------------------------------------------
-    async def _recv_json(self) -> dict:
+    async def _recv_json(self) -> dict[str, Any]:
         assert self._ws is not None
         raw = await self._ws.recv()
         if isinstance(raw, (bytes, bytearray)):
             return {}
-        return json.loads(raw)
+        data: dict[str, Any] = json.loads(raw)
+        return data
 
-    def _raise_error_frame(self, msg: dict) -> None:
+    def _raise_error_frame(self, msg: dict[str, Any]) -> None:
         code = msg.get("code")
         if code == "insufficient_balance":
             raise InsufficientBalanceError(

@@ -15,7 +15,7 @@ if sys.version_info < (3, 10):  # pragma: no cover
         f"{sys.version_info.major}.{sys.version_info.minor}."
     )
 
-__version__ = "0.2.0"
+__version__ = "0.3.0"
 
 from ._client import AsyncNexara, Nexara
 from ._exceptions import (
