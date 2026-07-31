@@ -60,6 +60,7 @@ class HttpxTransport:
         *,
         form: dict[str, Any] | None = None,
         file: FileInput | None = None,
+        params: dict[str, Any] | None = None,
     ) -> Response:
         # Build the URL ourselves rather than lean on httpx base_url joining:
         # RFC-3986 join drops the "/v1" prefix for an absolute-path reference.
@@ -73,7 +74,7 @@ class HttpxTransport:
             if attempt and hasattr(file, "seek"):
                 file.seek(0)  # type: ignore[union-attr]
             try:
-                resp = self._send(method, url, headers, form, file)
+                resp = self._send(method, url, headers, form, file, params)
             except httpx.TimeoutException as exc:
                 if attempt < self._max_retries:
                     attempt += 1
@@ -101,9 +102,10 @@ class HttpxTransport:
         headers: dict[str, str],
         form: dict[str, Any] | None,
         file: FileInput | None,
+        params: dict[str, Any] | None = None,
     ) -> httpx.Response:
         if method == "GET":
-            return self._client.get(url, headers=headers)
+            return self._client.get(url, headers=headers, params=params)
 
         data = _wire_form(form or {})
         if file is None:
@@ -152,6 +154,7 @@ class AsyncHttpxTransport:
         *,
         form: dict[str, Any] | None = None,
         file: FileInput | None = None,
+        params: dict[str, Any] | None = None,
     ) -> Response:
         url = f"{self._base_url}/{path.lstrip('/')}"
         headers = {"Authorization": f"Bearer {self._api_key}"}
@@ -161,7 +164,7 @@ class AsyncHttpxTransport:
             if attempt and hasattr(file, "seek"):
                 file.seek(0)  # type: ignore[union-attr]
             try:
-                resp = await self._send(method, url, headers, form, file)
+                resp = await self._send(method, url, headers, form, file, params)
             except httpx.TimeoutException as exc:
                 if attempt < self._max_retries:
                     attempt += 1
@@ -189,9 +192,10 @@ class AsyncHttpxTransport:
         headers: dict[str, str],
         form: dict[str, Any] | None,
         file: FileInput | None,
+        params: dict[str, Any] | None = None,
     ) -> httpx.Response:
         if method == "GET":
-            return await self._client.get(url, headers=headers)
+            return await self._client.get(url, headers=headers, params=params)
 
         data = _wire_form(form or {})
         if file is None:

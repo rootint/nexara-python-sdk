@@ -1,7 +1,8 @@
 # Nexara Python SDK
 
 Python SDK for the [Nexara](https://nexara.ru) speech-to-text API: transcription,
-speaker diarization, speaker role tagging, and structured LLM post-processing.
+speaker diarization, speaker role tagging, structured LLM post-processing, and
+account billing.
 Full API documentation lives at [docs.nexara.ru](https://docs.nexara.ru).
 
 Requires Python 3.10+.
@@ -73,6 +74,32 @@ result = client.transcriptions.create(
 print(result.llm_output)          # dict, validated against your schema
 print(result.transcription.text)  # the transcript it was derived from
 ```
+
+## Balance and usage
+
+`client.billing` reports what is on the account and what it has been spent on.
+Both endpoints cover the whole account, not just the key you authenticate with:
+
+```python
+balance = client.billing.balance()
+print(balance.balance, balance.currency, balance.rate_per_min)
+
+# One page of billed calls, newest first.
+page = client.billing.usage(limit=20)
+for item in page.items:
+    print(item.timestamp, item.task, item.cost, item.api_key.name)
+
+# ...or let the SDK walk the pages. History is unbounded — bound it.
+for item in client.billing.iter_usage(max_items=200):
+    print(item.request_id, item.seconds, item.cost)
+```
+
+Paging is keyset-based, not offset-based: pass a page's `next_cursor` as
+`cursor=` to get the next (older) page, so calls arriving mid-walk cannot shift
+rows across a page boundary. `item.cost` is `None` — not `0` — for rows written
+before per-request costs were recorded, and `rate_per_min` covers plain
+transcription only (`profanity_filter`, `roles` and `prompt` are surcharges on
+top of it).
 
 ## asyncio
 

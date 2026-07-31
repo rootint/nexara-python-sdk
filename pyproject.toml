@@ -1,7 +1,7 @@
 [project]
 name = "nexara"
 dynamic = ["version"]
-description = "Python SDK for the Nexara speech-to-text API: transcription, diarization, speaker roles, structured LLM output"
+description = "Python SDK for the Nexara speech-to-text API: transcription, diarization, speaker roles, structured LLM output, billing"
 readme = "README.md"
 license = "MIT"
 license-files = ["LICENSE"]

@@ -49,6 +49,7 @@ class MockTransport:
         *,
         form: dict[str, Any] | None = None,
         file: FileInput | None = None,
+        params: dict[str, Any] | None = None,
     ) -> Response:
         form = form or {}
 
@@ -61,6 +62,12 @@ class MockTransport:
         match = _JOB_PATH.match(path)
         if method == "GET" and match:
             return self._poll_job(match.group("job_id"))
+
+        if method == "GET" and path == "/billing/balance":
+            return Response(200, fixtures.build_balance())
+
+        if method == "GET" and path == "/billing/usage":
+            return self._usage(params or {})
 
         return Response(404, {"detail": f"Not Found: {method} {path}"})
 
@@ -160,6 +167,25 @@ class MockTransport:
         )
 
 
+    # -- billing -----------------------------------------------------------
+
+    def _usage(self, params: dict[str, Any]) -> Response:
+        """One page of billed calls, with the server's own 422 on bad bounds.
+
+        The SDK checks these before sending, so this branch is only reachable by
+        a caller going through the transport directly — which is exactly the
+        case worth keeping honest.
+        """
+        limit = int(params.get("limit", 50))
+        raw_cursor = params.get("cursor")
+        cursor = int(raw_cursor) if raw_cursor is not None else None
+
+        if not 1 <= limit <= 100 or (cursor is not None and cursor < 1):
+            return Response(422, {"detail": "Input should be a valid page bound"})
+
+        return Response(200, fixtures.build_usage_page(cursor, limit))
+
+
 class AsyncMockTransport:
     """The async twin of MockTransport, satisfying the AsyncTransport protocol.
 
@@ -185,5 +211,6 @@ class AsyncMockTransport:
         *,
         form: dict[str, Any] | None = None,
         file: FileInput | None = None,
+        params: dict[str, Any] | None = None,
     ) -> Response:
-        return self._inner.request(method, path, form=form, file=file)
+        return self._inner.request(method, path, form=form, file=file, params=params)

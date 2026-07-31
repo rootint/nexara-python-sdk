@@ -4,6 +4,10 @@ Everything above this line (resources, validation, models) is the real SDK.
 Below it sit the production httpx transports (`_http.py`) and the in-memory
 mock (`_mock/`). The point of the seam is that swapping them changes no
 public API — which also means validation runs for real even on the mock.
+
+`form`/`file` carry the multipart body of a POST; `params` carries the query
+string of a GET (only the billing usage endpoint takes one). A custom transport
+must accept all three keywords.
 """
 
 from __future__ import annotations
@@ -36,6 +40,7 @@ class Transport(Protocol):
         *,
         form: dict[str, Any] | None = None,
         file: FileInput | None = None,
+        params: dict[str, Any] | None = None,
     ) -> Response: ...
 
 
@@ -49,4 +54,5 @@ class AsyncTransport(Protocol):
         *,
         form: dict[str, Any] | None = None,
         file: FileInput | None = None,
+        params: dict[str, Any] | None = None,
     ) -> Response: ...

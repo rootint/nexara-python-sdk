@@ -36,6 +36,7 @@ from ._exceptions import (
     SyncLLMTimeoutError,
 )
 from ._sentinel import NOT_GIVEN, NotGiven
+from .types.billing import Balance, Currency, UsageApiKey, UsageItem, UsagePage
 from .types.diarization import Diarization, DiarizedSegment, DiarizedWord
 from .types.job import AsyncJob, Job, JobStatus
 from .types.realtime import RealtimeEvent, RealtimeToken
@@ -58,6 +59,8 @@ __all__ = [
     "AuthenticationError",
     "BadGatewayError",
     "BadRequestError",
+    "Balance",
+    "Currency",
     "Diarization",
     "DiarizedSegment",
     "DiarizedWord",
@@ -80,6 +83,9 @@ __all__ = [
     "Sentence",
     "SyncLLMTimeoutError",
     "Transcription",
+    "UsageApiKey",
+    "UsageItem",
+    "UsagePage",
     "VerboseTranscription",
     "Word",
 ]

@@ -6,6 +6,7 @@ import os
 
 from ._http import AsyncHttpxTransport, HttpxTransport
 from ._transport import AsyncTransport, Transport
+from .resources.billing import AsyncBilling, Billing
 from .resources.realtime import Realtime
 from .resources.transcriptions import AsyncTranscriptions, Transcriptions
 
@@ -75,6 +76,7 @@ class Nexara:
             max_retries=max_retries,
         )
         self.transcriptions = Transcriptions(self._transport)
+        self.billing = Billing(self._transport)
         self.realtime = Realtime(self.api_key, url=self.streaming_url)
 
     def close(self) -> None:
@@ -132,6 +134,7 @@ class AsyncNexara:
             max_retries=max_retries,
         )
         self.transcriptions = AsyncTranscriptions(self._transport)
+        self.billing = AsyncBilling(self._transport)
         self.realtime = Realtime(self.api_key, url=self.streaming_url)
 
     async def aclose(self) -> None:
