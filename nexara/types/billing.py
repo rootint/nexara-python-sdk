@@ -28,8 +28,9 @@ class Balance(BaseModel):
     per-account, not a public list price.
 
     The server stores a per-second price and multiplies by 60 for this field.
-    It covers plain transcription only: `profanity_filter`, `role_tagging` and
-    `prompt` (LLM) each add a surcharge that is not reflected here.
+    It covers plain transcription only: `profanity_filter`, `role_tagging`,
+    `emotions` and `prompt` (LLM) each add a surcharge that is not reflected
+    here.
     """
 
     currency: Currency
@@ -69,7 +70,12 @@ class UsageItem(BaseModel):
 
     profanity_filter: bool = False
     role_tagging: bool = False
-    """Both are billed as surcharges on top of the per-minute rate."""
+    emotions: bool = False
+    """All three are billed as surcharges on top of the per-minute rate.
+
+    `emotions` records whether emotion recognition *produced* output, not merely
+    whether it was asked for: a call that requested it and got nothing back is
+    not charged for it, and shows False here."""
 
     llm_input_tokens: int | None = None
     llm_output_tokens: int | None = None

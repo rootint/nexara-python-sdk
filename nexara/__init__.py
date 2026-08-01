@@ -15,7 +15,7 @@ if sys.version_info < (3, 10):  # pragma: no cover
         f"{sys.version_info.major}.{sys.version_info.minor}."
     )
 
-__version__ = "0.4.0"
+__version__ = "0.5.0"
 
 from ._client import AsyncNexara, Nexara
 from ._exceptions import (
@@ -37,7 +37,13 @@ from ._exceptions import (
 )
 from ._sentinel import NOT_GIVEN, NotGiven
 from .types.billing import Balance, Currency, UsageApiKey, UsageItem, UsagePage
-from .types.diarization import Diarization, DiarizedSegment, DiarizedWord
+from .types.diarization import (
+    EMOTION_LABELS,
+    Diarization,
+    DiarizedSegment,
+    DiarizedWord,
+    Emotion,
+)
 from .types.job import AsyncJob, Job, JobStatus
 from .types.realtime import RealtimeEvent, RealtimeToken
 from .types.transcription import (
@@ -50,6 +56,7 @@ from .types.transcription import (
 )
 
 __all__ = [
+    "EMOTION_LABELS",
     "NOT_GIVEN",
     "APIConnectionError",
     "APIError",
@@ -64,6 +71,7 @@ __all__ = [
     "Diarization",
     "DiarizedSegment",
     "DiarizedWord",
+    "Emotion",
     "InsufficientBalanceError",
     "InternalServerError",
     "Job",

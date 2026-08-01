@@ -42,6 +42,12 @@ MAX_ROLES = 10
 MAX_ROLE_NAME_LEN = 64
 MAX_ROLE_DESC_LEN = 500
 
+# Emotion recognition runs inside the ASR model, so it exists only where that
+# model does. The server 400s every other combination rather than silently
+# returning no emotion, and so do we — for free.
+EMOTION_MODEL = "nexara-ru"
+EMOTION_RESPONSE_FORMATS: frozenset[str] = frozenset({"json", "verbose_json"})
+
 _DIARIZE_ONLY = ("num_speakers", "roles", "diarization_setting")
 
 # The server checks `language` against a fixed list of ~100 ISO-639-1 codes in
@@ -69,6 +75,7 @@ def validate_and_build_form(
     json_schema: NotGivenOr[str | dict[str, Any] | None] = NOT_GIVEN,
     num_speakers: NotGivenOr[int | None] = NOT_GIVEN,
     roles: NotGivenOr[str | list[str] | dict[str, str] | None] = NOT_GIVEN,
+    emotions: NotGivenOr[bool] = NOT_GIVEN,
     diarization_setting: NotGivenOr[str] = NOT_GIVEN,
     model: NotGivenOr[str] = NOT_GIVEN,
 ) -> dict[str, Any]:
@@ -183,6 +190,29 @@ def validate_and_build_form(
 
     roles_form = _validate_roles(roles) if given(roles) and roles is not None else None
 
+    mdl = resolve(model, "whisper-1")
+
+    # --- emotions ---------------------------------------------------------
+    # Checked after the prompt block above, which can rewrite `fmt` — the server
+    # validates in the same order, so prompt= and emotions= combine there too.
+    want_emotions = bool(resolve(emotions, False))
+    if want_emotions:
+        if task != "diarize":
+            _fail("emotions=True requires task='diarize'. The server rejects it otherwise.")
+        if mdl != EMOTION_MODEL:
+            _fail(
+                f"emotions=True requires model={EMOTION_MODEL!r} — emotion is produced "
+                f"by that ASR model itself, and the server rejects any other. "
+                f"Got model={mdl!r}."
+            )
+        if fmt not in EMOTION_RESPONSE_FORMATS:
+            _fail(
+                f"emotions=True requires response_format in "
+                f"{sorted(EMOTION_RESPONSE_FORMATS)} — the emotion object hangs off "
+                f"each segment and {fmt!r} has nowhere to put it. The server rejects "
+                f"the combination rather than bill you for output you cannot see."
+            )
+
     # --- build form -------------------------------------------------------
     form: dict[str, Any] = {
         "task": task,
@@ -191,7 +221,7 @@ def validate_and_build_form(
         # by the server at all.
         "timestamp_granularities[]": gran,
         "profanity_filter": resolve(profanity_filter, False),
-        "model": resolve(model, "whisper-1"),
+        "model": mdl,
     }
     if url is not None:
         form["url"] = url
@@ -209,6 +239,10 @@ def validate_and_build_form(
             form["num_speakers"] = n_speakers
         if roles_form is not None:
             form["roles"] = roles_form
+        # Sent only when asked for. The field defaults to False server-side, so
+        # omitting it says exactly the same thing with one less form part.
+        if want_emotions:
+            form["emotions"] = True
 
     return form
 

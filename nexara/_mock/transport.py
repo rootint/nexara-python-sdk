@@ -79,7 +79,7 @@ class MockTransport:
         granularity = form.get("timestamp_granularities[]", ["segment"])[0]
 
         if task == "diarize":
-            payload = fixtures.build_diarize()
+            payload = fixtures.build_diarize(emotions=bool(form.get("emotions")))
             if sync:
                 # Only the sync handler strips. The Celery worker does not, so
                 # the same request returns words via the async path. This one

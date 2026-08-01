@@ -12,9 +12,35 @@ from pydantic import BaseModel
 
 from .transcription import Word
 
+EMOTION_LABELS: tuple[str, ...] = ("angry", "sad", "neutral", "positive")
+"""The labels the server currently emits. It filters anything else out before
+the response is built, so in practice `Emotion.label` is one of these."""
+
 
 class DiarizedWord(Word):
     speaker: str = "speaker_0"
+
+
+class Emotion(BaseModel):
+    """Per-segment emotion, present only when `emotions=True` was requested.
+
+    The server strips its scoring internals (windows, scored_seconds, group_size,
+    unit_id, out_of_distribution) before sending, so what arrives is exactly
+    these three fields.
+    """
+
+    label: str
+    """One of EMOTION_LABELS. Deliberately not a Literal: pydantic validates at
+    runtime, so pinning the set would turn a *new* server label into a hard parse
+    failure for the whole diarization — losing the transcript over an advisory
+    field. Compare against EMOTION_LABELS if you need exhaustiveness."""
+
+    confidence: float
+    """How sure the model is of `label`, 0..1."""
+
+    probs: dict[str, float] | None = None
+    """Per-label probabilities, keyed by EMOTION_LABELS. Absent when the backend
+    did not send them — `label` and `confidence` are always there."""
 
 
 class DiarizedSegment(BaseModel):
@@ -24,6 +50,13 @@ class DiarizedSegment(BaseModel):
     end: float
     text: str
     speaker: str
+
+    emotion: Emotion | None = None
+    """Set only when the request passed `emotions=True`, and only on segments the
+    model could actually score — a scored response can still have segments
+    without it, so check per segment rather than per response.
+
+    Never present on `words`: emotion is scored over a segment's audio."""
 
 
 class Diarization(BaseModel):

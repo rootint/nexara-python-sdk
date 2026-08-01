@@ -41,3 +41,23 @@ result = client.transcriptions.create(
 )
 for segment in result.segments:
     print(f"{segment.speaker}: {segment.text}")
+
+# emotions: per-segment emotion recognition. Scoring happens inside the ASR
+# model, so this needs task="diarize" AND model="nexara-ru" AND a JSON response
+# format — anything else is a client-side error here (and a 400 on the server)
+# rather than a paid request that quietly returns no emotion.
+print()
+result = client.transcriptions.create(
+    url="https://example.com/call.mp3",
+    task="diarize",
+    model="nexara-ru",
+    emotions=True,
+)
+for segment in result.segments:
+    # Not every segment gets scored — check before reading. `probs` carries the
+    # full distribution when the backend sends it.
+    if segment.emotion:
+        print(f"{segment.speaker}: {segment.text} [{segment.emotion.label} "
+              f"{segment.emotion.confidence:.0%}]")
+    else:
+        print(f"{segment.speaker}: {segment.text} [not scored]")

@@ -72,6 +72,7 @@ class Transcriptions:
         dictionary: NotGivenOr[str | None] = ...,
         num_speakers: NotGivenOr[int | None] = ...,
         roles: NotGivenOr[str | list[str] | dict[str, str] | None] = ...,
+        emotions: NotGivenOr[bool] = ...,
         diarization_setting: NotGivenOr[str] = ...,
         model: NotGivenOr[str] = ...,
     ) -> Diarization: ...
@@ -90,6 +91,7 @@ class Transcriptions:
         dictionary: NotGivenOr[str | None] = ...,
         num_speakers: NotGivenOr[int | None] = ...,
         roles: NotGivenOr[str | list[str] | dict[str, str] | None] = ...,
+        emotions: NotGivenOr[bool] = ...,
         diarization_setting: NotGivenOr[str] = ...,
         model: NotGivenOr[str] = ...,
     ) -> str: ...
@@ -154,6 +156,7 @@ class Transcriptions:
         json_schema: NotGivenOr[str | dict[str, Any] | None] = NOT_GIVEN,
         num_speakers: NotGivenOr[int | None] = NOT_GIVEN,
         roles: NotGivenOr[str | list[str] | dict[str, str] | None] = NOT_GIVEN,
+        emotions: NotGivenOr[bool] = NOT_GIVEN,
         diarization_setting: NotGivenOr[str] = NOT_GIVEN,
         model: NotGivenOr[str] = NOT_GIVEN,
     ) -> Any:
@@ -169,6 +172,13 @@ class Transcriptions:
         `roles` turns on speaker role_tagging and requires task="diarize". Pass
         "auto" to let the model invent labels, a list to restrict them, or a dict
         to add descriptions; lists and dicts are JSON-encoded for you.
+
+        `emotions=True` attaches an `emotion` object to each diarized segment.
+        The scoring happens inside the ASR model, so it needs task="diarize",
+        model="nexara-ru" and a JSON response format — every other combination is
+        a 400 (checked here first). It carries a per-second surcharge, but only
+        for output actually delivered: the server drops the charge when the
+        backend scored nothing.
 
         Not in the public docs (docs.nexara.ru) — supported by the server but
         undocumented, so treat them as unstable and subject to change:
@@ -199,6 +209,7 @@ class Transcriptions:
             json_schema=json_schema,
             num_speakers=num_speakers,
             roles=roles,
+            emotions=emotions,
             diarization_setting=diarization_setting,
             model=model,
         )
@@ -226,6 +237,7 @@ class Transcriptions:
         json_schema: NotGivenOr[str | dict[str, Any] | None] = NOT_GIVEN,
         num_speakers: NotGivenOr[int | None] = NOT_GIVEN,
         roles: NotGivenOr[str | list[str] | dict[str, str] | None] = NOT_GIVEN,
+        emotions: NotGivenOr[bool] = NOT_GIVEN,
         diarization_setting: NotGivenOr[str] = NOT_GIVEN,
         model: NotGivenOr[str] = NOT_GIVEN,
     ) -> Job:
@@ -254,6 +266,7 @@ class Transcriptions:
             json_schema=json_schema,
             num_speakers=num_speakers,
             roles=roles,
+            emotions=emotions,
             diarization_setting=diarization_setting,
             model=model,
         )
@@ -324,6 +337,7 @@ class AsyncTranscriptions:
         dictionary: NotGivenOr[str | None] = ...,
         num_speakers: NotGivenOr[int | None] = ...,
         roles: NotGivenOr[str | list[str] | dict[str, str] | None] = ...,
+        emotions: NotGivenOr[bool] = ...,
         diarization_setting: NotGivenOr[str] = ...,
         model: NotGivenOr[str] = ...,
     ) -> Diarization: ...
@@ -342,6 +356,7 @@ class AsyncTranscriptions:
         dictionary: NotGivenOr[str | None] = ...,
         num_speakers: NotGivenOr[int | None] = ...,
         roles: NotGivenOr[str | list[str] | dict[str, str] | None] = ...,
+        emotions: NotGivenOr[bool] = ...,
         diarization_setting: NotGivenOr[str] = ...,
         model: NotGivenOr[str] = ...,
     ) -> str: ...
@@ -406,6 +421,7 @@ class AsyncTranscriptions:
         json_schema: NotGivenOr[str | dict[str, Any] | None] = NOT_GIVEN,
         num_speakers: NotGivenOr[int | None] = NOT_GIVEN,
         roles: NotGivenOr[str | list[str] | dict[str, str] | None] = NOT_GIVEN,
+        emotions: NotGivenOr[bool] = NOT_GIVEN,
         diarization_setting: NotGivenOr[str] = NOT_GIVEN,
         model: NotGivenOr[str] = NOT_GIVEN,
     ) -> Any:
@@ -423,6 +439,7 @@ class AsyncTranscriptions:
             json_schema=json_schema,
             num_speakers=num_speakers,
             roles=roles,
+            emotions=emotions,
             diarization_setting=diarization_setting,
             model=model,
         )
@@ -450,6 +467,7 @@ class AsyncTranscriptions:
         json_schema: NotGivenOr[str | dict[str, Any] | None] = NOT_GIVEN,
         num_speakers: NotGivenOr[int | None] = NOT_GIVEN,
         roles: NotGivenOr[str | list[str] | dict[str, str] | None] = NOT_GIVEN,
+        emotions: NotGivenOr[bool] = NOT_GIVEN,
         diarization_setting: NotGivenOr[str] = NOT_GIVEN,
         model: NotGivenOr[str] = NOT_GIVEN,
     ) -> AsyncJob:
@@ -467,6 +485,7 @@ class AsyncTranscriptions:
             json_schema=json_schema,
             num_speakers=num_speakers,
             roles=roles,
+            emotions=emotions,
             diarization_setting=diarization_setting,
             model=model,
         )
