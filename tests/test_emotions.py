@@ -8,12 +8,14 @@ these combinations; failing client-side just makes it free.
 from __future__ import annotations
 
 import asyncio
+from typing import Any
 
 import pytest
 
 from nexara import AsyncNexara, Emotion, Nexara, NexaraValidationError
 from nexara._mock.transport import AsyncMockTransport, MockTransport
-from nexara._validation import validate_and_build_form
+from nexara._transport import FileInput, Response
+from nexara._validation import ResponseFormat, Task, validate_and_build_form
 
 AUDIO = "https://example.com/call.mp3"
 
@@ -23,10 +25,22 @@ def client() -> Nexara:
     return Nexara(api_key="k", transport=MockTransport())
 
 
-def _diarize(**kwargs):
-    params = {"url": AUDIO, "task": "diarize", "model": "nexara-ru", "emotions": True}
-    params.update(kwargs)
-    return validate_and_build_form(**params)
+def _diarize(
+    *,
+    task: Task = "diarize",
+    model: str = "nexara-ru",
+    response_format: ResponseFormat = "verbose_json",
+    prompt: str | None = None,
+) -> dict[str, Any]:
+    """The form for a diarization that asked for emotion, with one knob turned."""
+    return validate_and_build_form(
+        url=AUDIO,
+        task=task,
+        model=model,
+        response_format=response_format,
+        prompt=prompt,
+        emotions=True,
+    )
 
 
 # -- guardrails --------------------------------------------------------------
@@ -65,7 +79,9 @@ def test_emotions_allows_json_formats(fmt):
 def test_emotions_false_never_conflicts():
     """A caller who did not ask for emotion must not be rejected for using
     whisper-1, transcribe, or srt."""
-    form = validate_and_build_form(url=AUDIO, task="transcribe", emotions=False, response_format="srt")
+    form = validate_and_build_form(
+        url=AUDIO, task="transcribe", emotions=False, response_format="srt"
+    )
     assert "emotions" not in form
 
 
@@ -85,31 +101,39 @@ def test_emotions_omitted_when_not_requested():
     assert "emotions" not in validate_and_build_form(url=AUDIO, task="diarize")
 
 
+class RecordingTransport(MockTransport):
+    """A mock that keeps the last form it was handed, per path."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.forms: dict[str, dict[str, Any]] = {}
+
+    def request(
+        self,
+        method: str,
+        path: str,
+        *,
+        form: dict[str, Any] | None = None,
+        file: FileInput | None = None,
+        params: dict[str, Any] | None = None,
+    ) -> Response:
+        if form is not None:
+            self.forms[path] = form
+        return super().request(method, path, form=form, file=file, params=params)
+
+
 def test_emotions_reaches_the_wire():
-    seen: dict[str, object] = {}
-
-    class RecordingTransport(MockTransport):
-        def request(self, method, path, *, form=None, file=None, params=None):
-            seen["form"] = form
-            return super().request(method, path, form=form, file=file, params=params)
-
-    nx = Nexara(api_key="k", transport=RecordingTransport())
+    transport = RecordingTransport()
+    nx = Nexara(api_key="k", transport=transport)
     nx.transcriptions.create(url=AUDIO, task="diarize", model="nexara-ru", emotions=True)
-    assert seen["form"]["emotions"] is True
+    assert transport.forms["/audio/transcriptions"]["emotions"] is True
 
 
 def test_create_job_carries_emotions():
-    seen: dict[str, object] = {}
-
-    class RecordingTransport(MockTransport):
-        def request(self, method, path, *, form=None, file=None, params=None):
-            if path.endswith("/async"):
-                seen["form"] = form
-            return super().request(method, path, form=form, file=file, params=params)
-
-    nx = Nexara(api_key="k", transport=RecordingTransport())
+    transport = RecordingTransport()
+    nx = Nexara(api_key="k", transport=transport)
     nx.transcriptions.create_job(url=AUDIO, task="diarize", model="nexara-ru", emotions=True)
-    assert seen["form"]["emotions"] is True
+    assert transport.forms["/audio/transcriptions/async"]["emotions"] is True
 
 
 # -- result shape ------------------------------------------------------------
@@ -123,6 +147,7 @@ def test_emotion_parses_onto_segments(client):
     assert isinstance(emotion, Emotion)
     assert emotion.label == "neutral"
     assert emotion.confidence == 0.87
+    assert emotion.probs is not None
     assert set(emotion.probs) == {"angry", "sad", "neutral", "positive"}
 
 
